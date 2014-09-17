@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.chaos.smsSimulation.server.model.Message" table="message" catalog="db_sms">
+		<id name="id" type="java.lang.String">
+			<column name="ID" length="32"></column>
+			<generator class="uuid.hex"></generator>
+		</id>
+		<property name="content" type="java.lang.String">
+			<column name="CONTENT"></column>
+		</property>
+		<property name="senderNum" type="java.lang.String">
+			<column name="SENDER_NUM" length="11"></column>
+		</property>
+		<property name="receiverNum" type="java.lang.String">
+			<column name="RECEIVER_NUM" length="11"></column>
+		</property>
+		<property name="time" type="java.sql.Timestamp">
+			<column name="TIME" length="19"></column>
+		</property>
+		<property name="status" type="java.lang.Integer">
+			<column name="STATUS"></column>
+		</property>
+		
+	<!--<property name="backupField1" type="java.lang.String">
+			<column name="BACK_FIELD1" length="200" />
+		</property>
+		<property name="backupField2" type="java.lang.String">
+			<column name="BACK_FIELD2" length="200" />
+		</property>
+		<property name="backupField3" type="java.lang.String">
+			<column name="BACK_FIELD3" length="200" />
+		</property>
+		<property name="backupField4" type="java.lang.String">
+			<column name="BACK_FIELD4" length="200" />
+		</property>
+		<property name="backupField5" type="java.lang.String">
+			<column name="BACK_FIELD5" length="200" />
+		</property>-->
+	</class>
+</hibernate-mapping>

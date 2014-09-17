@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+		<property name="url" value="jdbc:mysql://localhost:3306/db_sms?useUnicode=true&amp;characterEncoding=utf8">
+		</property>
+		<property name="username" value="sms_admin"></property>
+		<property name="password" value="*qqe#CytWfiP3TsTx0M"></property>
+	</bean>
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					org.hibernate.dialect.MySQLDialect
+				</prop>
+			</props>
+		</property>
+		<property name="mappingResources">
+			<list>
+				<value>com/chaos/smsSimulation/server/model/Message.hbm.xml</value>
+				<value>com/chaos/smsSimulation/server/model/User.hbm.xml</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Transaction configuration -->
+	<bean id="txManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory"/>
+		</property>
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="*" propagation="SUPPORTS" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<aop:config>
+		<aop:pointcut id="productServiceMethods"
+			expression="execution(* com.chaos.smsSimulation.server.dao.impl.*.*(..))"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="productServiceMethods"/>
+	</aop:config>
+	
+	<!-- DAO configuration -->
+	<bean id="MessageDao" class="com.chaos.smsSimulation.server.dao.impl.MessageDaoImpl">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory"/>
+		</property>
+	</bean>
+	<bean id="UserDao" class="com.chaos.smsSimulation.server.dao.impl.UserDaoImpl">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory"/>
+		</property>
+	</bean>
+	
+	<!-- SLO configuration -->
+	<bean id="MessageService" class="com.chaos.smsSimulation.server.service.impl.MessageServiceImpl">
+		<property name="messageDao">
+			<ref bean="MessageDao"/>
+		</property>
+		<property name="userService">
+			<ref bean="UserService"/>
+		</property>
+	</bean>
+	<bean id="UserService" class="com.chaos.smsSimulation.server.service.impl.UserServiceImpl">
+		<property name="userDao">
+			<ref bean="UserDao"/>
+		</property>
+		<property name="messageService">
+			<ref bean="MessageService"/>
+		</property>
+	</bean>
+	
+	<!-- Controller -->
+	<bean id="PortListener" class="com.chaos.smsSimulation.server.controller.PortListener">
+		<property name="messageService">
+			<ref bean="MessageService"/>
+		</property>
+		<property name="userService">
+			<ref bean="UserService"/>
+		</property>
+	</bean>
+</beans>
