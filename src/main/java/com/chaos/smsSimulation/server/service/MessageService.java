@@ -21,6 +21,8 @@
 
 package com.chaos.smsSimulation.server.service;
 
+import java.util.List;
+
 import com.chaos.smsSimulation.server.model.Message;
 
 /**
@@ -29,14 +31,17 @@ import com.chaos.smsSimulation.server.model.Message;
  */
 public interface MessageService {
 	
-	public static int SEND_PORT = 3416;
-	public static int RECEIVE_PORT = 3415;
+	public static final int SEND_PORT = 3416;
+	public static final int RECEIVE_PORT = 3415;
+	public static final String END_OF_MSG = "\f";
 
 	boolean sendMessage(Message msg);
+	
+	boolean sendMessages(List<Message> msgs) throws Exception;
 	
 	boolean saveMessage(Message msg);
 	
 	Message getMessageById(String id);
 	
-	boolean sendUnsentMessages(String receiverNum);
+	boolean sendUnsentMessages(String receiverNum) throws Exception;
 }

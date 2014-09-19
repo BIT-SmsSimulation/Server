@@ -22,7 +22,6 @@
 package com.chaos.smsSimulation.server.controller;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -30,6 +29,7 @@ import java.net.Socket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.chaos.smsSimulation.server.model.Message;
 import com.chaos.smsSimulation.server.service.MessageService;
 import com.chaos.smsSimulation.server.service.UserService;
 
@@ -71,20 +71,92 @@ public class PortListener {
 		public void run() {
 			// TODO Auto-generated method stub
 			try {
-				LOGGER.info(socket.getInetAddress().toString());
-				LOGGER.info(String.valueOf(socket.getPort()));
-				
 				BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				
 				String content;
 				while ((content = reader.readLine()) != null) {
-					LOGGER.info(content);
+					switch (content) {
+					case "M":						
+						String senderNum = readPhoneNum(reader);
+						String receiverNum = readPhoneNum(reader);
+						String msgContent = "";
+						boolean newlineFlag = false;
+						while (!(content = reader.readLine()).equals(MessageService.END_OF_MSG)) {
+							if (newlineFlag) {
+								msgContent += "\n";
+							} else {
+								newlineFlag = true;
+							}
+							msgContent += content;
+						}
+						
+						Message msg = new Message();
+						msg.setContent(msgContent);
+						msg.setSenderNum(senderNum);
+						msg.setReceiverNum(receiverNum);
+						if (messageService.sendMessage(msg)) {
+							LOGGER.info("Message from " + senderNum + " to " + receiverNum + "  has been sent successfully");
+							msg.setStatus(Message.SENT);
+						} else {
+							LOGGER.info("Message from " + senderNum + " to " + receiverNum + " failed to be sent");
+							LOGGER.info("Saving message to db...");
+							msg.setStatus(Message.SENDING);
+						}
+						
+						messageService.saveMessage(msg);
+						break;
+						
+					case "U":
+						String num = readPhoneNum(reader);
+						
+						if ((content = reader.readLine()) == null) {
+							throw new Exception("Format error");
+						} else {
+							String ip = socket.getInetAddress().getHostAddress();
+							switch (content) {
+							case "login":
+								if (userService.login(num, ip)) {
+									LOGGER.info(num + "@" + ip + ": login success");
+									LOGGER.info("Sending unsent messages to this user...");
+									messageService.sendUnsentMessages(num);
+								} else {
+									LOGGER.error(num + "@" + ip + ": login failure");
+								}
+								break;
+								
+							case "logoff":
+								if (userService.logoff(num, ip)) {
+									LOGGER.info(num + "@" + ip + ": logoff success");
+								} else {
+									LOGGER.error(num + "@" + ip + ": logoff failure");
+								}
+								break;
+
+							default:
+								throw new Exception("Format error");
+							}
+						}
+						break;
+
+					default:
+						throw new Exception("Format error");
+					}
 				}
-				
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		
+		private String readPhoneNum(BufferedReader reader) throws Exception {
+			String line;
+			
+			if ((line = reader.readLine()) == null) {
+				throw new Exception("Format error");
+			} else if (!line.matches("[0-9]{11}")) {
+				throw new Exception("Format error");
+			}
+			return line;
 		}
 
 		public Socket getSocket() {

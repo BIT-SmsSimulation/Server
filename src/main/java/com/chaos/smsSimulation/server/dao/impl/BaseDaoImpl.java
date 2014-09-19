@@ -95,13 +95,12 @@ public abstract class BaseDaoImpl<E, PK extends Serializable> extends HibernateD
 		Set<Map.Entry<String, Object>> set = paraMap.entrySet();
 		for (Iterator<Map.Entry<String, Object>> it = set.iterator(); it.hasNext();) {
 			Map.Entry<String, Object> entry = it.next();
-			if (flag == 0) {
-				flag = 1;
-			} else if (flag == 1) {
+			if (flag != 0) {
 				queryString += " and";
+			} else {
+				flag = 1;
 			}
 			queryString += " e." + entry.getKey() + "=?";
-			
 			values.add(entry.getValue());
 		}
 		
@@ -119,6 +118,7 @@ public abstract class BaseDaoImpl<E, PK extends Serializable> extends HibernateD
 					if (big != null) {
 						queryString += " and e." + key + "<=?";
 						values.add(big);
+						++flag;
 					}
 				}
 			}
@@ -176,10 +176,10 @@ public abstract class BaseDaoImpl<E, PK extends Serializable> extends HibernateD
 		Set<Map.Entry<String, Object>> set = paraMap.entrySet();
 		for (Iterator<Map.Entry<String, Object>> it = set.iterator(); it.hasNext();) {
 			Map.Entry<String, Object> entry = it.next();
-			if (flag == 0) {
-				flag = 1;
-			} else if (flag == 1) {
+			if (flag != 0) {
 				queryString += " and";
+			} else {
+				flag = 1;
 			}
 			queryString += " e." + entry.getKey() + "=?";
 			

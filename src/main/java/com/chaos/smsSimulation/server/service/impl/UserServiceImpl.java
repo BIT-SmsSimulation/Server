@@ -79,6 +79,17 @@ public class UserServiceImpl implements UserService {
 			return true;
 		}
 	}
+	
+	@Override
+	public String getUserIp(String num) {
+		// TODO Auto-generated method stub
+		List<User> users = userDao.findByProperty("contact", num);
+		if (users.size() == 0) {
+			return null;
+		} else {
+			return users.get(0).getIp();
+		}
+	}
 
 	@Override
 	public boolean login(String num, String ip) {

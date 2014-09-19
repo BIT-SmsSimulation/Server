@@ -39,6 +39,8 @@ public interface UserService {
 	
 	boolean isOnline(String num);
 	
+	String getUserIp(String num);
+	
 	boolean login(String num, String ip);
 	
 	boolean logoff(String num, String ip);
