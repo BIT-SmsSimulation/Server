@@ -34,6 +34,10 @@ public interface MessageService {
 	public static final int SEND_PORT = 3416;
 	public static final int RECEIVE_PORT = 3415;
 	public static final String END_OF_MSG = "\f";
+	
+	public static final int RESULT_SUCCESS = 0;
+	public static final int RESULT_SENDING = 1;
+	public static final int RESULT_DELAY = 2;
 
 	boolean sendMessage(Message msg);
 	
@@ -44,4 +48,6 @@ public interface MessageService {
 	Message getMessageById(String id);
 	
 	boolean sendUnsentMessages(String receiverNum) throws Exception;
+	
+	boolean sendReceipt(Message msg, int type);
 }

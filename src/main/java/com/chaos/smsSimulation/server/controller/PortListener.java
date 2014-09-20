@@ -76,7 +76,7 @@ public class PortListener {
 				String content;
 				while ((content = reader.readLine()) != null) {
 					switch (content) {
-					case "M":						
+					case "M":
 						String senderNum = readPhoneNum(reader);
 						String receiverNum = readPhoneNum(reader);
 						String msgContent = "";
@@ -95,11 +95,13 @@ public class PortListener {
 						msg.setSenderNum(senderNum);
 						msg.setReceiverNum(receiverNum);
 						if (messageService.sendMessage(msg)) {
-							LOGGER.info("Message from " + senderNum + " to " + receiverNum + "  has been sent successfully");
+							LOGGER.info("Message from " + senderNum + " to " + receiverNum + " has been sent successfully");
+							messageService.sendReceipt(msg, MessageService.RESULT_SUCCESS);
 							msg.setStatus(Message.SENT);
 						} else {
 							LOGGER.info("Message from " + senderNum + " to " + receiverNum + " failed to be sent");
 							LOGGER.info("Saving message to db...");
+							messageService.sendReceipt(msg, MessageService.RESULT_SENDING);
 							msg.setStatus(Message.SENDING);
 						}
 						
@@ -136,6 +138,9 @@ public class PortListener {
 								throw new Exception("Format error");
 							}
 						}
+						break;
+						
+					case "":
 						break;
 
 					default:

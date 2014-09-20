@@ -41,7 +41,7 @@ import com.chaos.smsSimulation.server.service.UserService;
  *
  */
 public class MessageServiceImpl implements MessageService {
-	
+		
 	private MessageDao messageDao;
 	private UserService userService;
 
@@ -68,7 +68,7 @@ public class MessageServiceImpl implements MessageService {
 			nums.add(msg.getReceiverNum());
 		}
 		if (nums.size() == 0) {
-			
+			return true;
 		} else if (nums.size() != 1) {
 			throw new Exception("必须是同一个收件人！");
 		}
@@ -83,7 +83,16 @@ public class MessageServiceImpl implements MessageService {
 		}
 		
 		if (msgs.size() > 0 && userService.isOnline(msgs.get(0).getReceiverNum())) {
-			return send(userService.getUserIp(msgs.get(0).getReceiverNum()), content);
+			if (send(userService.getUserIp(msgs.get(0).getReceiverNum()), content)) {
+				for (Message msg : msgs) {
+					msg.setStatus(Message.SENT);
+					messageDao.update(msg);
+					
+					sendReceipt(msg, RESULT_SUCCESS);
+				}
+				return true;
+			}
+			return false;
 		}
 		return false;
 	}
@@ -112,8 +121,19 @@ public class MessageServiceImpl implements MessageService {
 		return sendMessages(messageDao.findByMap(map));
 	}
 	
-	private boolean send(String ip, String content) {
+	@Override
+	public boolean sendReceipt(Message msg, int type) {
+		// TODO Auto-generated method stub
+		String content = "R\n";
+		content += msg.getReceiverNum() + " " + String.valueOf(type) + "\n";
 		
+		if (userService.isOnline(msg.getSenderNum())) {
+			return send(userService.getUserIp(msg.getSenderNum()), content);
+		}
+		return false;
+	}
+	
+	private boolean send(String ip, String content) {
 		try {
 			Socket socket = new Socket(ip, SEND_PORT);
 			socket.getOutputStream().write(content.getBytes());
