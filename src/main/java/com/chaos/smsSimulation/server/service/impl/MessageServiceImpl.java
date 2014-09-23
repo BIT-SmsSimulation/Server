@@ -22,6 +22,7 @@
 package com.chaos.smsSimulation.server.service.impl;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.sql.Timestamp;
@@ -30,6 +31,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.chaos.smsSimulation.server.dao.MessageDao;
 import com.chaos.smsSimulation.server.model.Message;
@@ -41,7 +45,9 @@ import com.chaos.smsSimulation.server.service.UserService;
  *
  */
 public class MessageServiceImpl implements MessageService {
-		
+
+	protected static Logger LOGGER = LoggerFactory.getLogger(MessageService.class);
+	
 	private MessageDao messageDao;
 	private UserService userService;
 
@@ -55,8 +61,19 @@ public class MessageServiceImpl implements MessageService {
 		content += END_OF_MSG + "\n";
 
 		if (userService.isOnline(msg.getReceiverNum())) {
-			return send(userService.getUserIp(msg.getReceiverNum()), content);
+			if (!send(userService.getUserIp(msg.getReceiverNum()), content)) {
+				LOGGER.info("Clear dead user " + msg.getReceiverNum() + ", force logoff");
+				userService.forceLogoff(msg.getReceiverNum());
+				
+				LOGGER.info("Message from " + msg.getSenderNum() + " to " + msg.getReceiverNum() + " failed to be sent");
+				LOGGER.info("Saving message to db...");
+				return false;
+			}
+			LOGGER.info("Message from " + msg.getSenderNum() + " to " + msg.getReceiverNum() + " has been sent successfully");
+			return true;
 		}
+		LOGGER.info("Message from " + msg.getSenderNum() + " to " + msg.getReceiverNum() + " failed to be sent");
+		LOGGER.info("Saving message to db...");
 		return false;
 	}
 	
@@ -88,7 +105,7 @@ public class MessageServiceImpl implements MessageService {
 					msg.setStatus(Message.SENT);
 					messageDao.update(msg);
 					
-					sendReceipt(msg, RESULT_SUCCESS);
+					sendReceipt(msg, RESULT_DELAY);
 				}
 				return true;
 			}
@@ -128,14 +145,20 @@ public class MessageServiceImpl implements MessageService {
 		content += msg.getReceiverNum() + " " + String.valueOf(type) + "\n";
 		
 		if (userService.isOnline(msg.getSenderNum())) {
-			return send(userService.getUserIp(msg.getSenderNum()), content);
+			if (!send(userService.getUserIp(msg.getSenderNum()), content)) {
+				LOGGER.info("Clear dead user " + msg.getSenderNum() + ", force logoff");
+				userService.forceLogoff(msg.getSenderNum());
+				return false;
+			}
+			return true;
 		}
 		return false;
 	}
 	
 	private boolean send(String ip, String content) {
 		try {
-			Socket socket = new Socket(ip, SEND_PORT);
+			Socket socket = new Socket();
+			socket.connect(new InetSocketAddress(ip, SEND_PORT), 5000);
 			socket.getOutputStream().write(content.getBytes());
 			socket.close();
 			return true;
@@ -145,6 +168,10 @@ public class MessageServiceImpl implements MessageService {
 			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		} catch (Exception e) {
+			// TODO: handle exception
 			e.printStackTrace();
 			return false;
 		}

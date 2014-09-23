@@ -6,8 +6,8 @@
 <hibernate-mapping>
 	<class name="com.chaos.smsSimulation.server.model.User" table="user" catalog="db_sms">
 		<id name="id" type="java.lang.String">
-			<column name="ID" length="32"></column>
-			<generator class="uuid.hex"></generator>
+			<column name="ID" length="36"></column>
+			<generator class="org.hibernate.id.UUIDGenerator"></generator>
 		</id>
 		<property name="contact" type="java.lang.String">
 			<column name="CONTACT" length="11"></column>

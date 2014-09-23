@@ -26,9 +26,6 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.chaos.smsSimulation.server.model.Message;
 import com.chaos.smsSimulation.server.service.MessageService;
 import com.chaos.smsSimulation.server.service.UserService;
@@ -38,8 +35,6 @@ import com.chaos.smsSimulation.server.service.UserService;
  *
  */
 public class PortListener {
-	
-	protected static final Logger LOGGER = LoggerFactory.getLogger(PortListener.class);
 	
 	private MessageService messageService;
 	private UserService userService;
@@ -95,12 +90,9 @@ public class PortListener {
 						msg.setSenderNum(senderNum);
 						msg.setReceiverNum(receiverNum);
 						if (messageService.sendMessage(msg)) {
-							LOGGER.info("Message from " + senderNum + " to " + receiverNum + " has been sent successfully");
 							messageService.sendReceipt(msg, MessageService.RESULT_SUCCESS);
 							msg.setStatus(Message.SENT);
 						} else {
-							LOGGER.info("Message from " + senderNum + " to " + receiverNum + " failed to be sent");
-							LOGGER.info("Saving message to db...");
 							messageService.sendReceipt(msg, MessageService.RESULT_SENDING);
 							msg.setStatus(Message.SENDING);
 						}
@@ -118,20 +110,12 @@ public class PortListener {
 							switch (content) {
 							case "login":
 								if (userService.login(num, ip)) {
-									LOGGER.info(num + "@" + ip + ": login success");
-									LOGGER.info("Sending unsent messages to this user...");
 									messageService.sendUnsentMessages(num);
-								} else {
-									LOGGER.error(num + "@" + ip + ": login failure");
 								}
 								break;
 								
 							case "logoff":
-								if (userService.logoff(num, ip)) {
-									LOGGER.info(num + "@" + ip + ": logoff success");
-								} else {
-									LOGGER.error(num + "@" + ip + ": logoff failure");
-								}
+								userService.logoff(num, ip);
 								break;
 
 							default:

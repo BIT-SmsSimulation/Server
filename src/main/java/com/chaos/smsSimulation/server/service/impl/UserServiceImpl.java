@@ -21,7 +21,12 @@
 
 package com.chaos.smsSimulation.server.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.chaos.smsSimulation.server.dao.UserDao;
 import com.chaos.smsSimulation.server.model.User;
@@ -33,6 +38,8 @@ import com.chaos.smsSimulation.server.service.UserService;
  *
  */
 public class UserServiceImpl implements UserService {
+	
+	protected static Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
 	private UserDao userDao;
 	private MessageService messageService;
@@ -40,6 +47,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public boolean addUser(User user) {
 		// TODO Auto-generated method stub
+		LOGGER.info("New user " + user.getContact() + " comes @" + user.getIp());
 		user.setStatus(User.ONLINE);
 		userDao.save(user);
 		return true;
@@ -101,10 +109,32 @@ public class UserServiceImpl implements UserService {
 			user.setIp(ip);
 			return addUser(user);
 		} else if (users.get(0).getStatus() == User.ONLINE) {
-			return false;
+			if (users.get(0).getIp().equals(ip)) {
+				LOGGER.info(num + "@" + ip + " login again, ignore");
+				return false;
+			} else {
+				LOGGER.info("User@" + ip + " tried to login " + num + "@" + users.get(0).getIp() + ", operation refused");
+				return false;
+			}
 		} else {
-			users.get(0).setStatus(User.ONLINE);
-			userDao.update(users.get(0));
+			User user = users.get(0);
+			
+			Map<String, Object> map = new HashMap<>();
+			map.put("ip", ip);
+			map.put("status", User.ONLINE);
+			users = userDao.findByMap(map);
+			if (users.size() != 0) {
+				for (User deadUser : users) {
+					LOGGER.info("Clear dead user " + deadUser.getContact() + ", force logoff");
+					deadUser.setStatus(User.OFFLINE);
+					userDao.update(deadUser);
+				}
+			}
+			
+			LOGGER.info(num + "@" + ip + ": login success");
+			user.setIp(ip);
+			user.setStatus(User.ONLINE);
+			userDao.update(user);
 			return true;
 		}
 	}
@@ -114,14 +144,30 @@ public class UserServiceImpl implements UserService {
 		// TODO Auto-generated method stub
 		List<User> users = userDao.findByProperty("contact", num);
 		if (users .size() == 0) {
+			LOGGER.info("User@" + ip + " tried to logoff nonexistent user " + num + ", operation refused");
 			return false;
 		} else if (!users.get(0).getIp().equals(ip)) {
+			LOGGER.info("User@" + ip + " tried to logoff " + num + "@" + users.get(0).getIp() + ", operation refused");
 			return false;
 		} else {
+			LOGGER.info(num + "@" + ip + ": logoff success");
 			users.get(0).setStatus(User.OFFLINE);
 			userDao.update(users.get(0));
 			return true;
 		}
+	}
+	
+	@Override
+	public boolean forceLogoff(String num) {
+		// TODO Auto-generated method stub
+		List<User> users = userDao.findByProperty("contact", num);
+		if (users.size() == 0) {
+			return false;
+		}
+		
+		users.get(0).setStatus(User.OFFLINE);
+		userDao.update(users.get(0));
+		return true;
 	}
 
 	public UserDao getUserDao() {

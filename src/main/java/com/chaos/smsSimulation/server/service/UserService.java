@@ -44,4 +44,6 @@ public interface UserService {
 	boolean login(String num, String ip);
 	
 	boolean logoff(String num, String ip);
+	
+	boolean forceLogoff(String num);
 }

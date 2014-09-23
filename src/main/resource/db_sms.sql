@@ -38,7 +38,7 @@ DROP TABLE IF EXISTS `message`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `message` (
-  `ID` char(32) NOT NULL,
+  `ID` char(36) NOT NULL,
   `CONTENT` text NOT NULL,
   `SENDER_NUM` char(11) NOT NULL,
   `RECEIVER_NUM` char(11) NOT NULL,
@@ -53,7 +53,7 @@ DROP TABLE IF EXISTS `user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user` (
-  `ID` char(32) NOT NULL,
+  `ID` char(36) NOT NULL,
   `CONTACT` char(11) NOT NULL,
   `IP` varchar(15) NOT NULL,
   `STATUS` int NOT NULL,
