@@ -16,6 +16,13 @@
         </includes>
       </resource>
       <resource>
+        <targetPath>.</targetPath>
+        <directory>src/main/resource</directory>
+        <includes>
+          <include>db_sms.sql</include>
+        </includes>
+      </resource>
+      <resource>
         <targetPath>${project.path}/model</targetPath>
         <directory>src/main/java/${project.path}/model</directory>
         <includes>

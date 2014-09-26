@@ -134,6 +134,13 @@
 				<targetPath>.</targetPath>
 			</resource>
 			<resource>
+				<directory>src/main/resource</directory>
+				<includes>
+					<include>db_sms.sql</include>
+				</includes>
+				<targetPath>.</targetPath>
+			</resource>
+			<resource>
 				<directory>src/main/java/${project.path}/model</directory>
 				<includes>
 					<include>*.hbm.xml</include>
